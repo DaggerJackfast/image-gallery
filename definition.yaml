@@ -1,0 +1,33 @@
+App: Private image hosting
+Backend:
+  Framework: Serverless framework
+  Language: TypeScript
+  Database: AWS RDS - PostgresSQL
+  ORM: Sequelize
+  Linter: eslint
+  File storage: AWS S3
+Frontend:
+  Framework: React
+  Language: any
+Auth service: AWS Cognito
+Frontend deploy: AWS amplify or AWS S3 host static website
+Usage description:
+  - User can register to system using email and password
+  - User need to confirm email to access system
+  - User can login using email and password
+  - User can upload image
+  - User can see list of uploaded images
+  - User can add description for each image
+  - User can delete uploaded image
+Additional features:
+  - Image thumbnail (S3 trigger lambda)
+  - Continuous deployment (AWS CodeBuild or Github Actions)
+  - Unit tests (Jest)
+  - Use presign url for images, user can see only own images and with time limit
+  - Can use base 64 to upload image file
+  - Can use presign url for put images
+ImageEntity:
+  id: uuid
+  url: string
+  description: string (text)
+  user: string (userId)
