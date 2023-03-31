@@ -5,7 +5,9 @@
   "main": "index.js",
   "dependencies": {
     "aws-sdk": "^2.1346.0",
-    "pg": "^8.10.0"
+    "pg": "^8.10.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.30.0"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.303.0",
