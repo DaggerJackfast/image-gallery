@@ -10,3 +10,7 @@ jspm_packages
 .vscode
 .fleet
 
+.Trashes
+
+# Secrets
+.secrets.json
