@@ -1,6 +1,7 @@
 import type { AWS } from '@serverless/typescript';
 import secrets from './.secrets.json'; // TODO: usage serverless-dotenv-plugin
 import fileBucketResources from './resources/fileBucketResources';
+import {createImage, deleteImage, getImage, healthcheckImage, updateImage} from './handlers/image/functions';
 
 
 const serverlessConfiguration: AWS = {
@@ -39,7 +40,8 @@ const serverlessConfiguration: AWS = {
       DB_PASSWORD: '${self:custom.DB_PASSWORD}',
       DB_PORT: '${self:custom.DB_PORT}',
       DB_HOST: '${self:custom.DB_HOST}',
-      FILE_BUCKET_NAME: '${self:custom.FILE_BUCKET_NAME}'
+      FILE_BUCKET_NAME: '${self:custom.FILE_BUCKET_NAME}',
+      REGION: 'us-east-1'
     }
   },
   custom: {
@@ -85,90 +87,11 @@ const serverlessConfiguration: AWS = {
         }
       ],
     },
-    healthCheckImage: {
-      handler: 'handlers/image.healthcheck',
-      events:[
-        {
-          http: {
-            method: 'get',
-            path: 'images-healthcheck',
-            // cors: true,
-          }
-        }
-      ]
-    },
-    // ...healthcheckImage,
-    createImage: {
-      handler: 'handlers/image.create',
-      events:[
-        {
-          http: {
-            method: 'post',
-            path: 'images',
-            // cors: true,
-          }
-        }
-      ]
-    },
-    getImages: {
-      handler: 'handlers/image.getAll',
-      events:[
-        {
-          http: {
-            method: 'get',
-            path: '/images',
-            // cors: true
-          }
-        }
-      ]
-    },
-    getImage: {
-      handler: 'handlers/image.getOne',
-      events:[
-        {
-          http: {
-            method: 'get',
-            path: '/images/{id}',
-            // cors: true
-          }
-        }
-      ]
-    },
-    updateImage: {
-      handler: 'handlers/image.update',
-      events:[
-        {
-          http: {
-            method: 'patch',
-            path: 'images/{id}',
-            // cors: true
-          }
-        }
-      ]
-    },
-    deleteImage: {
-      handler: 'handlers/image.destroy',
-      events:[
-        {
-          http: {
-            method: 'delete',
-            path: 'images/{id}',
-            // cors: true
-          }
-        }
-      ]
-    }
-    // proxyHealthCheck: {
-    //   handler: 'handlers/proxyHealthCheck.handler',
-    //   events: [
-    //     {
-    //       http: {
-    //         path: 'proxy-healthcheck',
-    //         method: 'get'
-    //       }
-    //     }
-    //   ]
-    // }
+    ...healthcheckImage,
+    ...createImage,
+    ...getImage,
+    ...updateImage,
+    ...deleteImage
   },
   resources: {
     // // eslint-disable-next-line @typescript-eslint/ban-ts-comment

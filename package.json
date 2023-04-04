@@ -4,7 +4,11 @@
   "description": "Image Gallery with serverless framework",
   "main": "index.js",
   "dependencies": {
+    "@middy/core": "^4.2.8",
+    "@middy/http-error-handler": "^4.2.8",
+    "@middy/http-json-body-parser": "^4.2.8",
     "aws-sdk": "^2.1346.0",
+    "json-schema-to-ts": "^2.7.2",
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.30.0"
