@@ -3,7 +3,7 @@ export default {
     RDSProxy: {
       Type: 'AWS::RDS::DBProxy',
       Properties: {
-        DBProxyName: '${self:custom.PROXY_NAME}', // TODO: fix data
+        DBProxyName: '${self:custom.PROXY_NAME}',
         EngineFamily: 'POSTGRESQL',
         RoleArn: '!GetAtt RDSProxyRole.Arn',
         Auth: [
