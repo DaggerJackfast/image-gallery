@@ -1,29 +1,7 @@
 import type { AWS } from '@serverless/typescript';
-import secrets from './.secrets.json';
-import rdsResources from './resources/rdsResources';
-import vpcResources from './resources/vpcResources';
-import routingResources from './resources/routingResources';
-import rdsProxyResources from './resources/rdsProxyResources';
+import secrets from './.secrets.json'; // TODO: usage serverless-dotenv-plugin
+import fileBucketResources from './resources/fileBucketResources';
 
-const postgresSqlRDSInstance = {
-  DependsOn: 'ServerlessVPCGA',
-  Type: 'AWS::RDS::DBInstance',
-  Properties: {
-    MasterUsername: '${self:custom.USERNAME}',
-    MasterUserPassword: '${self:custom.PASSWORD}',
-    AllocatedStorage: 20,
-    DBName: '${self:custom.DB_NAME}',
-    DBInstanceClass: 'db.t4g.small',
-    VPCSecurityGroups: ['!GetAtt ServerlessSecurityGroup.GroupId'],
-    DBSubnetGroupName: {
-      Ref: 'ServerlessSubnetGroup'
-    },
-    Engine: 'postgres',
-    PubliclyAccessible: true
-  }
-};
-
-// console.log('secrets: ', secrets);
 
 const serverlessConfiguration: AWS = {
   org: 'jackfast',
@@ -35,16 +13,33 @@ const serverlessConfiguration: AWS = {
     runtime: 'nodejs18.x',
     region: 'us-east-1',
     vpc: {
-      securityGroupIds: ['!Ref LambdaSecurityGroup'],
-      subnetIds: ['!Ref SubnetA', '!Ref SubnetB']
+      securityGroupIds: [
+        '${self:custom.SECURITY_GROUP_ID}',
+      ],
+      subnetIds: [
+        '${self:custom.SUBNET1_ID}',
+        '${self:custom.SUBNET2_ID}',
+        '${self:custom.SUBNET3_ID}',
+        '${self:custom.SUBNET4_ID}'
+      ]
     },
+    // TODO: can use serverless-iam-roles-per-function
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: ['s3:Get*', 's3:Put*', 's3:DeleteObject'],
+        Resource: 'arn:aws:s3:::${self:custom.FILE_BUCKET_NAME}/*'
+      },
+    ],
     environment: {
       NODE_ENV: '${opt:stage, \'dev\'}',
-      DB_NAME: '${self:custom.DB_NAME}_${opt:stage, \'dev\'}',
-      DB_USER: '${self:custom.DB_USERNAME}',
-      DB_PASS: '${self:custom.DB_PASSWORD}',
+      // DB_NAME: '${self:custom.DB_NAME}_${opt:stage, \'dev\'}',
+      DB_NAME: '${self:custom.DB_NAME}',
+      DB_USERNAME: '${self:custom.DB_USERNAME}',
+      DB_PASSWORD: '${self:custom.DB_PASSWORD}',
       DB_PORT: '${self:custom.DB_PORT}',
-      DB_HOST: '${self:custom.PROXY_ENDPOINT}',
+      DB_HOST: '${self:custom.DB_HOST}',
+      FILE_BUCKET_NAME: '${self:custom.FILE_BUCKET_NAME}'
     }
   },
   custom: {
@@ -59,28 +54,25 @@ const serverlessConfiguration: AWS = {
     DB_NAME: secrets.databaseName,
     DB_USERNAME: secrets.databaseUser,
     DB_PASSWORD: secrets.databasePassword,
-    // DB_PORT: secrets.databasePort, // !GetAtt RDSInstance.Endpoint.Port
-    DB_PORT: '!GetAtt RDSInstance.Endpoint.Port',
-    // PROXY_ENDPOINT: secrets.databaseEndpoint, //!GetAtt RDSProxy.Endpoint
-    PROXY_ENDPOINT: '!GetAtt RDSProxy.Endpoint',
-    VPC_CIDR: 10,
-    PROXY_NAME: 'image-gallery-rds-proxy-${opt:stage, \'dev\'}'
+    DB_PORT: secrets.databasePort,
+    DB_HOST: secrets.databaseHost,
+    SECURITY_GROUP_ID: secrets.securityGroupId,
+    SUBNET1_ID: secrets.subnet1Id,
+    SUBNET2_ID: secrets.subnet2Id,
+    SUBNET3_ID: secrets.subnet3Id,
+    SUBNET4_ID: secrets.subnet4Id,
+    FILE_BUCKET_NAME: 'image-gallery-files-${opt:stage, \'dev\'}',
+    s3: { // TODO: delete for prod
+      host: 'localhost',
+      directory: '/tmp'
+    }
   },
   plugins: [
     'serverless-esbuild',
-    'serverless-offline'
+    'serverless-offline',
+    'serverless-s3-local' // TODO: delete for prod
   ],
   package: { individually: true },
-  resources: {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    Resources: {
-      ...vpcResources.Resources,
-      ...routingResources.Resources,
-      ...rdsResources.Resources,
-      ...rdsProxyResources.Resources,
-    }
-  },
   functions: {
     index: {
       handler: 'index.handler',
@@ -91,8 +83,81 @@ const serverlessConfiguration: AWS = {
             path: '/'
           }
         }
+      ],
+    },
+    healthCheckImage: {
+      handler: 'handlers/image.healthcheck',
+      events:[
+        {
+          http: {
+            method: 'get',
+            path: 'images-healthcheck',
+            // cors: true,
+          }
+        }
       ]
     },
+    // ...healthcheckImage,
+    createImage: {
+      handler: 'handlers/image.create',
+      events:[
+        {
+          http: {
+            method: 'post',
+            path: 'images',
+            // cors: true,
+          }
+        }
+      ]
+    },
+    getImages: {
+      handler: 'handlers/image.getAll',
+      events:[
+        {
+          http: {
+            method: 'get',
+            path: '/images',
+            // cors: true
+          }
+        }
+      ]
+    },
+    getImage: {
+      handler: 'handlers/image.getOne',
+      events:[
+        {
+          http: {
+            method: 'get',
+            path: '/images/{id}',
+            // cors: true
+          }
+        }
+      ]
+    },
+    updateImage: {
+      handler: 'handlers/image.update',
+      events:[
+        {
+          http: {
+            method: 'patch',
+            path: 'images/{id}',
+            // cors: true
+          }
+        }
+      ]
+    },
+    deleteImage: {
+      handler: 'handlers/image.destroy',
+      events:[
+        {
+          http: {
+            method: 'delete',
+            path: 'images/{id}',
+            // cors: true
+          }
+        }
+      ]
+    }
     // proxyHealthCheck: {
     //   handler: 'handlers/proxyHealthCheck.handler',
     //   events: [
@@ -105,6 +170,23 @@ const serverlessConfiguration: AWS = {
     //   ]
     // }
   },
+  resources: {
+    // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // // @ts-ignore
+    // Resources: {
+    //   ...fileBucketResources.Resources,
+    // }
+    Resources: {
+      FileBucket: {
+        Type: 'AWS::S3::Bucket',
+        Properties: {
+          BucketName: '${self:custom.FILE_BUCKET_NAME}'
+        },
+        // AccessControl: 'Private',
+      }
+    }
+
+  }
 };
 
 module.exports = serverlessConfiguration;
