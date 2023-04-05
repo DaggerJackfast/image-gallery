@@ -6,8 +6,9 @@ export const update = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const {Image} = await connectToDatabase();
     const imageId = event.pathParameters?.id;
     const input = JSON.parse(event?.body || '{}');
-    await Image.update(input, {where: {id: imageId}});
-    const image = await Image.findByPk(imageId);
+    const userId = event.requestContext.authorizer?.principalId;
+    await Image.update(input, {where: {id: imageId, user: userId}});
+    const image = await Image.findOne({where: {id: imageId, user: userId}});
     return {
       statusCode: 200,
       headers: {'Content-Type': 'application/json'},

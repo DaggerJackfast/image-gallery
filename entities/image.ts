@@ -30,7 +30,7 @@ Image.init({
   },
   url: DataTypes.TEXT,
   description: { type: DataTypes.TEXT, defaultValue: ''},
-  user: { type: DataTypes.STRING, defaultValue: '' }
+  user: { type: DataTypes.STRING }
 }, {
   timestamps: true,
   tableName: 'images',

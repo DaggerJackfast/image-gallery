@@ -22,6 +22,7 @@ export const createImage = {
           method: 'post',
           path: 'images',
           cors: true,
+          authorizer: 'auth',
           request: {
             schemas: {
               'application/json': imageSchema
@@ -33,7 +34,7 @@ export const createImage = {
   }
 };
 
-export const getImage = {
+export const getImages = {
   getImages: {
     handler: 'handlers/image/getAll.getAll',
     events:[
@@ -41,7 +42,23 @@ export const getImage = {
         http: {
           method: 'get',
           path: '/images',
-          cors: true
+          cors: true,
+          authorizer: 'auth',
+        }
+      }
+    ]
+  }
+};
+export const getImage = {
+  getImages: {
+    handler: 'handlers/image/getOne.getOne',
+    events:[
+      {
+        http: {
+          method: 'get',
+          path: '/images/{id}',
+          cors: true,
+          authorizer: 'auth',
         }
       }
     ]
@@ -56,6 +73,7 @@ export const updateImage = {
         http: {
           method: 'patch',
           path: 'images/{id}',
+          authorizer: 'auth',
           cors: true
         }
       }
@@ -71,6 +89,7 @@ export const deleteImage = {
         http: {
           method: 'delete',
           path: 'images/{id}',
+          authorizer: 'auth',
           cors: true
         }
       }

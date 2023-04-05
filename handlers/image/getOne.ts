@@ -6,7 +6,8 @@ export const getOne = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
   try {
     const {Image} = await connectToDatabase();
     const imageId = event.pathParameters?.id;
-    const image = await Image.findByPk(imageId);
+    const userId = event.requestContext.authorizer?.principalId;
+    const image = await Image.findOne({where: {id: imageId, user: userId}});
     if(!image) {
       throw new HTTPError(404, `Image with id: ${image} not found`);
     }

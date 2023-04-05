@@ -28,11 +28,15 @@ type ImageParams = FromSchema<typeof imageSchema>;
 
 const handler: ValidatedEventAPIGatewayProxyEvent<ImageParams> = async (event) => {
   try {
+    const userId = event.requestContext.authorizer?.principalId;
+    if(!userId) {
+      throw 'No user';
+    }
     const {Image} = await connectToDatabase();
     const body = event.body;
     const {url: base64Url, filename, contentType, ...rest} = body;
     const location = await sendBase64ToS3({base64Url, filename, contentType});
-    const imageInput = {...rest, url: location};
+    const imageInput = {...rest, url: location, user: userId};
     const image = await Image.create(imageInput);
     return {
       statusCode: 201,

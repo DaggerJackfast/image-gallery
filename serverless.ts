@@ -1,7 +1,7 @@
 import type { AWS } from '@serverless/typescript';
 import secrets from './.secrets.json'; // TODO: usage serverless-dotenv-plugin
 import fileBucketResources from './resources/fileBucketResources';
-import {createImage, deleteImage, getImage, healthcheckImage, updateImage} from './handlers/image/functions';
+import {createImage, deleteImage, getImage, getImages, healthcheckImage, updateImage} from './handlers/image/functions';
 
 
 const serverlessConfiguration: AWS = {
@@ -41,7 +41,10 @@ const serverlessConfiguration: AWS = {
       DB_PORT: '${self:custom.DB_PORT}',
       DB_HOST: '${self:custom.DB_HOST}',
       FILE_BUCKET_NAME: '${self:custom.FILE_BUCKET_NAME}',
-      REGION: 'us-east-1'
+      AWS_REGION: 'us-east-1',
+      AUTH0_DOMAIN: '${self:custom.AUTH0_DOMAIN}',
+      AUTH0_JWKS_URI: '${self:custom.AUTH0_DOMAIN}.well-known/jwks.json',
+      AUTH0_API_ID: '${self:custom.AUTH0_API_ID}',
     }
   },
   custom: {
@@ -63,6 +66,8 @@ const serverlessConfiguration: AWS = {
     SUBNET2_ID: secrets.subnet2Id,
     SUBNET3_ID: secrets.subnet3Id,
     SUBNET4_ID: secrets.subnet4Id,
+    AUTH0_DOMAIN: secrets.auth0Domain,
+    AUTH0_API_ID: secrets.auth0ApiId,
     FILE_BUCKET_NAME: 'image-gallery-files-${opt:stage, \'dev\'}',
     s3: { // TODO: delete for prod
       host: 'localhost',
@@ -76,19 +81,26 @@ const serverlessConfiguration: AWS = {
   ],
   package: { individually: true },
   functions: {
+    auth: {
+      handler: 'handlers/auth0/auth.auth',
+    },
     index: {
       handler: 'index.handler',
       events: [
         {
           http: {
             method: 'get',
-            path: '/'
+            path: '/',
+            authorizer: 'auth',
+            cors: true,
           }
         }
       ],
     },
+
     ...healthcheckImage,
     ...createImage,
+    ...getImages,
     ...getImage,
     ...updateImage,
     ...deleteImage
@@ -106,6 +118,34 @@ const serverlessConfiguration: AWS = {
           BucketName: '${self:custom.FILE_BUCKET_NAME}'
         },
         // AccessControl: 'Private',
+      },
+      GatewayResponse: {
+        Type: 'AWS::ApiGateway::GatewayResponse',
+        Properties: {
+          ResponseParameters: {
+            'gatewayresponse.header.Access-Control-Allow-Origin': '\'*\'',
+            'gatewayresponse.header.Access-Control-Allow-Headers': '\'*\''
+          },
+          ResponseType: 'EXPIRED_TOKEN',
+          RestApiId: {
+            Ref: 'ApiGatewayRestApi'
+          },
+          StatusCode: '401'
+        }
+      },
+      AuthFailureGatewayResponse: {
+        Type: 'AWS::ApiGateway::GatewayResponse',
+        Properties: {
+          ResponseParameters: {
+            'gatewayresponse.header.Access-Control-Allow-Origin': '\'*\'',
+            'gatewayresponse.header.Access-Control-Allow-Headers': '\'*\''
+          },
+          ResponseType: 'UNAUTHORIZED',
+          RestApiId: {
+            Ref: 'ApiGatewayRestApi'
+          },
+          StatusCode: '401'
+        }
       }
     }
 

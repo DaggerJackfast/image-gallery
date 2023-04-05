@@ -3,9 +3,9 @@ import {connectToDatabase} from '../../database/connector';
 
 export const getAll = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
-    console.log('event: ', event);
     const {Image} = await connectToDatabase();
-    const image = await Image.findAll();
+    const userId = event.requestContext.authorizer?.principalId;
+    const image = await Image.findAll({where: { user: userId }});
     return {
       statusCode: 200,
       headers: {'Content-Type': 'application/json'},
