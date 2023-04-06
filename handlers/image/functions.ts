@@ -50,7 +50,7 @@ export const getImages = {
   }
 };
 export const getImage = {
-  getImages: {
+  getImage: {
     handler: 'handlers/image/getOne.getOne',
     events:[
       {
