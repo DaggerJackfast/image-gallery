@@ -119,6 +119,24 @@ export const getUploadUrl = {
   }
 };
 
+export const generateThumbnail = {
+  generateThumbnail: {
+    handler: 'handlers/image/generateThumbnail.generateThumbnail',
+    events: [
+      {
+        s3: {
+          bucket: '${self:custom.FILE_BUCKET_NAME}',
+          event: 's3:ObjectCreated:*',
+          existing: true,
+          rules: [
+            {prefix: 'uploads/'}
+          ]
+        }
+      }
+    ]
+  }
+};
+
 export default {
   ...createImage,
   ...getImages,
@@ -126,5 +144,6 @@ export default {
   ...updateImage,
   ...deleteImage,
   ...getUploadUrl,
-  ...healthcheckImage
+  ...healthcheckImage,
+  ...generateThumbnail
 };
