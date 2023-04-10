@@ -15,10 +15,11 @@
     "jwks-rsa": "^3.0.1",
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.30.0"
+    "sequelize": "^6.30.0",
+    "sharp": "^0.32.0"
   },
   "devDependencies": {
-    "@aws-sdk/types": "^3.303.0",
+    "@aws-sdk/types": "^3.306.0",
     "@jest/globals": "^29.5.0",
     "@serverless/typescript": "^3.29.0",
     "@types/aws-lambda": "^8.10.114",
