@@ -1,6 +1,5 @@
 import type { AWS } from '@serverless/typescript';
 import secrets from './.secrets.json'; // TODO: usage serverless-dotenv-plugin
-import fileBucketResources from './resources/fileBucketResources';
 import imageFunctions from './handlers/image/functions';
 
 
@@ -76,15 +75,15 @@ const serverlessConfiguration: AWS = {
     AUTH0_API_ID: secrets.auth0ApiId,
     AUTH0_PUBLIC_PEM: secrets.auth0PublicPem,
     FILE_BUCKET_NAME: 'image-gallery-files-${opt:stage, \'dev\'}',
-    // s3: { // TODO: delete for prod
-    //   host: 'localhost',
-    //   directory: '/tmp'
-    // }
+    s3: { // TODO: delete for prod
+      host: 'localhost',
+      directory: '/tmp'
+    }
   },
   plugins: [
     'serverless-esbuild',
     'serverless-offline',
-    // 'serverless-s3-local' // TODO: delete for prod
+    'serverless-s3-local' // TODO: delete for prod
   ],
   package: { individually: true },
   functions: {
@@ -121,27 +120,6 @@ const serverlessConfiguration: AWS = {
           AccessControl: 'Private',
         },
       },
-      // FileBucket: {
-      //   Type: 'AWS::S3::Bucket',
-      //   Properties: {
-      //     BucketName: '${self:custom.FILE_BUCKET_NAME}',
-      //     // TODO: set only for development
-      //     CorsConfiguration: {
-      //       CorsRules: [
-      //         {
-      //           AllowedOrigins: [
-      //             'http://localhost:5173',
-      //             'http://localhost:4569',
-      //             'http://localhost:3000'
-      //           ],
-      //           AllowedHeaders : ['*'],
-      //           AllowedMethods: ['PUT'],
-      //           MaxAge: 3000
-      //         }
-      //       ]
-      //     }},
-      //   // AccessControl: 'Private',
-      // },
       GatewayResponse: {
         Type: 'AWS::ApiGateway::GatewayResponse',
         Properties: {

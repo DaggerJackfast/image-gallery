@@ -3,9 +3,8 @@ import {MiddyfiedHandler} from '@middy/core';
 import {ValidatedEventAPIGatewayProxyEvent} from '../../lib/apiGateway';
 import {FromSchema} from 'json-schema-to-ts';
 import {middyfy} from '../../lib/lambda';
-import {checkFileIsExists, getPresignedGetUrl, sendBase64ToS3} from '../../lib/s3';
+import { getSignedGetUrl } from '../../lib/s3';
 
-// TODO: move to separate modules
 export const imageSchema = {
   type: 'object',
   required: ['filename'],
@@ -13,12 +12,6 @@ export const imageSchema = {
     filename: {
       type: 'string'
     },
-    // filename: {
-    //   type: 'string',
-    // },
-    // contentType: {
-    //   type: 'string'
-    // },
     description: {
       type: 'string'
     }
@@ -35,24 +28,17 @@ const handler: ValidatedEventAPIGatewayProxyEvent<ImageParams> = async (event) =
     }
     const {Image} = await connectToDatabase();
     const body = event.body;
-    // const {url: base64Url, filename, contentType, ...rest} = body;
-    // TODO: check image is exists in s3 bucket;
-    // const location = await sendBase64ToS3({base64Url, filename, contentType});
     const {filename, ...rest} = body;
-    // const isExists = await checkFileIsExists(body.url);
-    // if(!isExists) {
-    //   throw 'file not found';
-    // }
-    console.log('pregetUrl');
-    const presignedUrl = await getPresignedGetUrl(filename);
-    console.log('presignedUrl: ', presignedUrl);
-    const imageInput = {...rest, url: filename, user: userId};
+    const presignedUrl = await getSignedGetUrl(filename);
+    const imageInput = {...rest, filename, user: userId};
     const image = await Image.create(imageInput);
+    console.log('image: ', JSON.stringify(image, null, 4));
     return {
       statusCode: 201,
       body: JSON.stringify({...image, url: presignedUrl})
     };
   } catch (err) {
+    console.log('createImage error: ', err);
     return {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
