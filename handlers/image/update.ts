@@ -1,14 +1,32 @@
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
 import {connectToDatabase} from '../../database/connector';
+import {ValidatedEventAPIGatewayProxyEvent} from '../../lib/apiGateway';
+import {FromSchema} from 'json-schema-to-ts';
+import {middyfy} from '../../lib/lambda';
+import {MiddyfiedHandler} from '@middy/core';
 
-// TODO: add validation
-export const update = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const updateImageSchema = {
+  type: 'object',
+  required: ['filename'],
+  properties: {
+    filename: {
+      type: 'string',
+    },
+    description: {
+      type: 'string'
+    }
+  }
+} as const;
+
+type UpdateImageParams = FromSchema<typeof updateImageSchema>
+
+// TODO: add replace image when update
+const handler: ValidatedEventAPIGatewayProxyEvent<UpdateImageParams> = async (event) => {
   try {
     const {Image} = await connectToDatabase();
     const imageId = event.pathParameters?.id;
-    const input = JSON.parse(event?.body || '{}');
+    const body = event.body;
     const userId = event.requestContext.authorizer?.principalId;
-    await Image.update(input, {where: {id: imageId, user: userId}});
+    await Image.update(body, {where: {id: imageId, user: userId}});
     const image = await Image.findOne({where: {id: imageId, user: userId}});
     return {
       statusCode: 200,
@@ -25,3 +43,6 @@ export const update = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     };
   }
 };
+export const update = middyfy(handler as MiddyfiedHandler);
+
+
