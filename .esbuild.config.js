@@ -5,6 +5,6 @@ module.exports = () => {
     minify: true,
     sourcemap: false,
     keepNames: true,
-    external: ['pg']
+    external: ['pg', 'sharp']
   };
 };
