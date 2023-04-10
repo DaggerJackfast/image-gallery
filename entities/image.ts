@@ -11,6 +11,8 @@ interface ImageAttributes {
 type ImageInput = Optional<ImageAttributes, 'id' | 'description' | 'user'>
 type ImageOutput = Required<ImageAttributes>
 
+
+// TODO: add autocalculated presignedUrl;
 class Image extends Model<ImageAttributes, ImageInput> implements ImageAttributes {
   public id!: string;
   public url!: string;
