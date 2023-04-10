@@ -1,4 +1,4 @@
-import {getPresignedUploadUrl} from '../../lib/s3';
+import {getSignedUploadUrl} from '../../lib/s3';
 import {ValidatedEventAPIGatewayProxyEvent} from '../../lib/apiGateway';
 import {FromSchema} from 'json-schema-to-ts';
 import {middyfy} from '../../lib/lambda';
@@ -26,8 +26,7 @@ export const handler: ValidatedEventAPIGatewayProxyEvent<UploadParams> = async (
       filename: body.filename,
       contentType: body.contentType,
     };
-    // TODO: add generate random postfix
-    const url = await getPresignedUploadUrl(uploadParams);
+    const url = await getSignedUploadUrl(uploadParams);
     return {
       statusCode: 200,
       headers: {'Content-Type': 'application/json'},
