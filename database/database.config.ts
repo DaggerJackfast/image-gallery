@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+import pg from 'pg';
 const CURRENT_LAMBDA_FUNCTION_TIMEOUT = 5000;
 
 
@@ -14,6 +15,7 @@ export const loadSequelize = (): Sequelize => {
     // TODO: database settings;
     database: dbName,
     dialect: 'postgres',
+    dialectModule: pg,
     username: dbUsername,
     password: dbPassword,
     host: dbHost,
