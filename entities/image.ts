@@ -3,7 +3,8 @@ import sequelize from '../database/database.config';
 
 interface ImageAttributes {
   id?: string;
-  url: string;
+  filename: string;
+  // url?: string;
   description?: string;
   user?: string; // TODO: change to required field
 }
@@ -15,8 +16,9 @@ type ImageOutput = Required<ImageAttributes>
 // TODO: add autocalculated presignedUrl;
 class Image extends Model<ImageAttributes, ImageInput> implements ImageAttributes {
   public id!: string;
-  public url!: string;
+  public filename!: string;
   public description!: string;
+  // public url!: string;
   public user!: string;
 
   public readonly createdAt!: Date;
@@ -30,9 +32,18 @@ Image.init({
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
-  url: DataTypes.TEXT,
+  filename: DataTypes.TEXT,
   description: { type: DataTypes.TEXT, defaultValue: ''},
-  user: { type: DataTypes.STRING }
+  user: { type: DataTypes.STRING },
+  // url: {
+  //   type: DataTypes.VIRTUAL,
+  //   async get() {
+  //     return await getSignedGetUrl(this.filename);
+  //   },
+  //   set() {
+  //     throw new Error('Do not try to set the `url` value!');
+  //   }
+  // }
 }, {
   timestamps: true,
   tableName: 'images',
