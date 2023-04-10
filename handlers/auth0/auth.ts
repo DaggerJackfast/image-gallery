@@ -1,5 +1,4 @@
 import jwt, {JwtPayload} from 'jsonwebtoken';
-import jwksClient from 'jwks-rsa';
 import { JwtRsaVerifier } from 'aws-jwt-verify';
 import type {APIGatewayTokenAuthorizerHandler} from 'aws-lambda';
 import {APIGatewayAuthorizerResult, APIGatewayTokenAuthorizerEvent} from 'aws-lambda/trigger/api-gateway-authorizer';
@@ -37,13 +36,6 @@ const getAuthToken = (params: APIGatewayTokenAuthorizerEvent): string => {
   }
   return match[1];
 };
-
-const client = jwksClient({
-  cache: true,
-  rateLimit: true,
-  jwksRequestsPerMinute: 10,
-  jwksUri: process.env.AUTH0_JWKS_URI || ''
-});
 
 
 const verifier = JwtRsaVerifier.create({
