@@ -1,29 +1,7 @@
 import type { AWS } from '@serverless/typescript';
-import secrets from './.secrets.json';
-import rdsResources from './resources/rdsResources';
-import vpcResources from './resources/vpcResources';
-import routingResources from './resources/routingResources';
-import rdsProxyResources from './resources/rdsProxyResources';
+import secrets from './.secrets.json'; // TODO: usage serverless-dotenv-plugin
+import imageFunctions from './handlers/image/functions';
 
-const postgresSqlRDSInstance = {
-  DependsOn: 'ServerlessVPCGA',
-  Type: 'AWS::RDS::DBInstance',
-  Properties: {
-    MasterUsername: '${self:custom.USERNAME}',
-    MasterUserPassword: '${self:custom.PASSWORD}',
-    AllocatedStorage: 20,
-    DBName: '${self:custom.DB_NAME}',
-    DBInstanceClass: 'db.t4g.small',
-    VPCSecurityGroups: ['!GetAtt ServerlessSecurityGroup.GroupId'],
-    DBSubnetGroupName: {
-      Ref: 'ServerlessSubnetGroup'
-    },
-    Engine: 'postgres',
-    PubliclyAccessible: true
-  }
-};
-
-// console.log('secrets: ', secrets);
 
 const serverlessConfiguration: AWS = {
   org: 'jackfast',
@@ -35,22 +13,47 @@ const serverlessConfiguration: AWS = {
     runtime: 'nodejs18.x',
     region: 'us-east-1',
     vpc: {
-      securityGroupIds: ['!Ref LambdaSecurityGroup'],
-      subnetIds: ['!Ref SubnetA', '!Ref SubnetB']
+      securityGroupIds: [
+        '${self:custom.SECURITY_GROUP_ID}',
+      ],
+      subnetIds: [
+        '${self:custom.SUBNET1_ID}',
+        '${self:custom.SUBNET2_ID}',
+        '${self:custom.SUBNET3_ID}',
+        '${self:custom.SUBNET4_ID}',
+        '${self:custom.SUBNET5_ID}',
+        '${self:custom.SUBNET6_ID}',
+      ]
     },
+    // TODO: can use serverless-iam-roles-per-function
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: ['s3:Get*', 's3:Put*', 's3:DeleteObject'],
+        Resource: 'arn:aws:s3:::${self:custom.FILE_BUCKET_NAME}/*'
+      },
+    ],
     environment: {
       NODE_ENV: '${opt:stage, \'dev\'}',
-      DB_NAME: '${self:custom.DB_NAME}_${opt:stage, \'dev\'}',
-      DB_USER: '${self:custom.DB_USERNAME}',
-      DB_PASS: '${self:custom.DB_PASSWORD}',
+      // DB_NAME: '${self:custom.DB_NAME}_${opt:stage, \'dev\'}',
+      DB_NAME: '${self:custom.DB_NAME}',
+      DB_USERNAME: '${self:custom.DB_USERNAME}',
+      DB_PASSWORD: '${self:custom.DB_PASSWORD}',
       DB_PORT: '${self:custom.DB_PORT}',
-      DB_HOST: '${self:custom.PROXY_ENDPOINT}',
+      DB_HOST: '${self:custom.DB_HOST}',
+      FILE_BUCKET_NAME: '${self:custom.FILE_BUCKET_NAME}',
+      RUNTIME_REGION: 'us-east-1',
+      AUTH0_DOMAIN: '${self:custom.AUTH0_DOMAIN}',
+      AUTH0_JWKS_URI: '${self:custom.AUTH0_DOMAIN}.well-known/jwks.json',
+      AUTH0_API_ID: '${self:custom.AUTH0_API_ID}',
+      AUTH0_PUBLIC_PEM: '${self:custom.AUTH0_PUBLIC_PEM}',
     }
   },
   custom: {
     esbuild: {
+      bundle: true,
       config: '.esbuild.config.js',
-      exclude: ['aws-sdk'],
+      external: ['pg'],
       target: 'node18',
       define: { 'require.resolve': undefined },
       platform: 'node',
@@ -59,52 +62,95 @@ const serverlessConfiguration: AWS = {
     DB_NAME: secrets.databaseName,
     DB_USERNAME: secrets.databaseUser,
     DB_PASSWORD: secrets.databasePassword,
-    // DB_PORT: secrets.databasePort, // !GetAtt RDSInstance.Endpoint.Port
-    DB_PORT: '!GetAtt RDSInstance.Endpoint.Port',
-    // PROXY_ENDPOINT: secrets.databaseEndpoint, //!GetAtt RDSProxy.Endpoint
-    PROXY_ENDPOINT: '!GetAtt RDSProxy.Endpoint',
-    VPC_CIDR: 10,
-    PROXY_NAME: 'image-gallery-rds-proxy-${opt:stage, \'dev\'}'
+    DB_PORT: secrets.databasePort,
+    DB_HOST: secrets.databaseHost,
+    SECURITY_GROUP_ID: secrets.securityGroupId,
+    SUBNET1_ID: secrets.subnet1Id,
+    SUBNET2_ID: secrets.subnet2Id,
+    SUBNET3_ID: secrets.subnet3Id,
+    SUBNET4_ID: secrets.subnet4Id,
+    SUBNET5_ID: secrets.subnet5Id,
+    SUBNET6_ID: secrets.subnet6Id,
+    AUTH0_DOMAIN: secrets.auth0Domain,
+    AUTH0_API_ID: secrets.auth0ApiId,
+    AUTH0_PUBLIC_PEM: secrets.auth0PublicPem,
+    FILE_BUCKET_NAME: 'image-gallery-files-${opt:stage, \'dev\'}',
+    s3: { // TODO: delete for prod
+      host: 'localhost',
+      directory: '/tmp'
+    }
   },
   plugins: [
     'serverless-esbuild',
-    'serverless-offline'
+    'serverless-offline',
+    'serverless-s3-local' // TODO: delete for prod
   ],
   package: { individually: true },
-  resources: {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    Resources: {
-      ...vpcResources.Resources,
-      ...routingResources.Resources,
-      ...rdsResources.Resources,
-      ...rdsProxyResources.Resources,
-    }
-  },
   functions: {
+    auth: {
+      handler: 'handlers/auth0/auth.auth',
+      timeout: 30,
+    },
     index: {
       handler: 'index.handler',
       events: [
         {
           http: {
             method: 'get',
-            path: '/'
+            path: '/',
+            // authorizer: 'auth',
+            cors: true,
           }
         }
-      ]
+      ],
     },
-    // proxyHealthCheck: {
-    //   handler: 'handlers/proxyHealthCheck.handler',
-    //   events: [
-    //     {
-    //       http: {
-    //         path: 'proxy-healthcheck',
-    //         method: 'get'
-    //       }
-    //     }
-    //   ]
-    // }
+    ...imageFunctions
   },
+  resources: {
+    // // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // // @ts-ignore
+    // Resources: {
+    //   ...fileBucketResources.Resources,
+    // }
+    Resources: {
+      FileBucket: {
+        Type: 'AWS::S3::Bucket',
+        Properties: {
+          BucketName: '${self:custom.FILE_BUCKET_NAME}',
+          AccessControl: 'Private',
+        },
+      },
+      GatewayResponse: {
+        Type: 'AWS::ApiGateway::GatewayResponse',
+        Properties: {
+          ResponseParameters: {
+            'gatewayresponse.header.Access-Control-Allow-Origin': '\'*\'',
+            'gatewayresponse.header.Access-Control-Allow-Headers': '\'*\''
+          },
+          ResponseType: 'EXPIRED_TOKEN',
+          RestApiId: {
+            Ref: 'ApiGatewayRestApi'
+          },
+          StatusCode: '401'
+        }
+      },
+      AuthFailureGatewayResponse: {
+        Type: 'AWS::ApiGateway::GatewayResponse',
+        Properties: {
+          ResponseParameters: {
+            'gatewayresponse.header.Access-Control-Allow-Origin': '\'*\'',
+            'gatewayresponse.header.Access-Control-Allow-Headers': '\'*\''
+          },
+          ResponseType: 'UNAUTHORIZED',
+          RestApiId: {
+            Ref: 'ApiGatewayRestApi'
+          },
+          StatusCode: '401'
+        }
+      }
+    }
+
+  }
 };
 
 module.exports = serverlessConfiguration;
