@@ -1,6 +1,7 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
 import {connectToDatabase} from '../../database/connector';
 
+// TODO: add validation
 export const update = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const {Image} = await connectToDatabase();

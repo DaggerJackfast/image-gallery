@@ -3,21 +3,22 @@ import {MiddyfiedHandler} from '@middy/core';
 import {ValidatedEventAPIGatewayProxyEvent} from '../../lib/apiGateway';
 import {FromSchema} from 'json-schema-to-ts';
 import {middyfy} from '../../lib/lambda';
-import {sendBase64ToS3} from '../../lib/s3';
+import {checkFileIsExists, getPresignedGetUrl, sendBase64ToS3} from '../../lib/s3';
 
+// TODO: move to separate modules
 export const imageSchema = {
   type: 'object',
-  required: ['url', 'filename', 'contentType'],
+  required: ['filename'],
   properties: {
-    url: {
-      type: 'string'
-    },
     filename: {
-      type: 'string',
-    },
-    contentType: {
       type: 'string'
     },
+    // filename: {
+    //   type: 'string',
+    // },
+    // contentType: {
+    //   type: 'string'
+    // },
     description: {
       type: 'string'
     }
@@ -34,13 +35,22 @@ const handler: ValidatedEventAPIGatewayProxyEvent<ImageParams> = async (event) =
     }
     const {Image} = await connectToDatabase();
     const body = event.body;
-    const {url: base64Url, filename, contentType, ...rest} = body;
-    const location = await sendBase64ToS3({base64Url, filename, contentType});
-    const imageInput = {...rest, url: location, user: userId};
+    // const {url: base64Url, filename, contentType, ...rest} = body;
+    // TODO: check image is exists in s3 bucket;
+    // const location = await sendBase64ToS3({base64Url, filename, contentType});
+    const {filename, ...rest} = body;
+    // const isExists = await checkFileIsExists(body.url);
+    // if(!isExists) {
+    //   throw 'file not found';
+    // }
+    console.log('pregetUrl');
+    const presignedUrl = await getPresignedGetUrl(filename);
+    console.log('presignedUrl: ', presignedUrl);
+    const imageInput = {...rest, url: filename, user: userId};
     const image = await Image.create(imageInput);
     return {
       statusCode: 201,
-      body: JSON.stringify(image)
+      body: JSON.stringify({...image, url: presignedUrl})
     };
   } catch (err) {
     return {

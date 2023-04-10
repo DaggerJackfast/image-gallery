@@ -1,4 +1,5 @@
 import {imageSchema} from './create';
+import {uploadSchema} from './getUploadUrl';
 export const healthcheckImage = {
   healthCheckImage: {
     handler: 'handlers/image/healthcheck.healthcheck',
@@ -95,4 +96,35 @@ export const deleteImage = {
       }
     ]
   }
+};
+
+export const getUploadUrl = {
+  getUploadUrl: {
+    handler: 'handlers/image/getUploadUrl.getUploadUrl',
+    events: [
+      {
+        http: {
+          method: 'post',
+          path: 'images-upload-url/',
+          authorizer: 'auth',
+          cors: true,
+          request: {
+            schemas: {
+              'application/json': uploadSchema
+            }
+          }
+        }
+      }
+    ]
+  }
+};
+
+export default {
+  ...createImage,
+  ...getImages,
+  ...getImage,
+  ...updateImage,
+  ...deleteImage,
+  ...getUploadUrl,
+  ...healthcheckImage
 };

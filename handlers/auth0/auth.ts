@@ -1,6 +1,6 @@
-import jwt, {JwtPayload, Secret} from 'jsonwebtoken';
+import jwt, {JwtPayload} from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
-import util from 'util';
+import { JwtRsaVerifier } from 'aws-jwt-verify';
 import type {APIGatewayTokenAuthorizerHandler} from 'aws-lambda';
 import {APIGatewayAuthorizerResult, APIGatewayTokenAuthorizerEvent} from 'aws-lambda/trigger/api-gateway-authorizer';
 const generatePolicy = (principalId: string, methodArn: string) => {
@@ -22,6 +22,7 @@ const generatePolicy = (principalId: string, methodArn: string) => {
 };
 
 const getAuthToken = (params: APIGatewayTokenAuthorizerEvent): string => {
+  console.log('getAuthToken params: ', params);
   if (!params.type || params.type !== 'TOKEN') {
     throw new Error('Expected "event.type" parameter to have value "TOKEN"');
   }
@@ -44,27 +45,38 @@ const client = jwksClient({
   jwksUri: process.env.AUTH0_JWKS_URI || ''
 });
 
-interface ISingingKeys {
-  publicKey?: string;
-  rsaPublicKey?: string;
-}
+
+const verifier = JwtRsaVerifier.create({
+  audience: process.env.AUTH0_API_ID || '',
+  issuer: process.env.AUTH0_DOMAIN || '',
+  jwksUri: process.env.AUTH0_JWKS_URI || ''
+});
 
 
-export const auth: APIGatewayTokenAuthorizerHandler = async (event: APIGatewayTokenAuthorizerEvent): Promise<APIGatewayAuthorizerResult>  => {
-  const token = getAuthToken(event);
+// TODO: fix access this lambda to internet
+const validateWithJwks = async (token: string): Promise<JwtPayload> => {
   const decoded = jwt.decode(token, {complete: true});
   if (!decoded || !decoded.header || !decoded.header.kid) {
     throw new Error('Auth token is invalid');
   }
+  // TODO: timeout error
+  // TODO: maybe need cache
+  const claims = await verifier.verify(token) ;
+  return claims as JwtPayload;
+};
+
+
+const validateWithPem = (token: string): JwtPayload => {
+  const publicKey = process.env.AUTH0_PUBLIC_PEM || '';
+  const claims = jwt.verify(token, publicKey);
+  return claims as JwtPayload;
+};
+export const auth: APIGatewayTokenAuthorizerHandler = async (event: APIGatewayTokenAuthorizerEvent): Promise<APIGatewayAuthorizerResult>  => {
   try {
-    const getSigningKey = util.promisify(client.getSigningKey);
-    const signingKeys = await getSigningKey(decoded.header.kid) as ISingingKeys;
-    const signingKey = (signingKeys.publicKey || signingKeys.rsaPublicKey) as Secret;
-    const jwtOptions = {
-      audience: process.env.AUTH0_API_ID,
-      issuer: process.env.AUTH0_DOMAIN
-    };
-    const claims = (jwt.verify(token, signingKey, jwtOptions)) as JwtPayload;
+
+    const token = getAuthToken(event);
+    // const claims = await validateWithJwks(token);
+    const claims = validateWithPem(token);
     const policy = generatePolicy(claims?.sub || '', event.methodArn);
 
     return {
@@ -73,7 +85,7 @@ export const auth: APIGatewayTokenAuthorizerHandler = async (event: APIGatewayTo
       context: {scope: claims.scope}
     };
   } catch (error) {
-    console.log(error);
+    console.log('AUTH ERROR =====>: ', error);
     throw 'Unauthorized';
   }
 };
