@@ -1,6 +1,7 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
 import {connectToDatabase} from '../../database/connector';
 import {getSignedGetUrl} from '../../lib/s3';
+import {getThumbnailUrl} from '../../lib/thumbnail';
 
 export const getAll = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
@@ -9,9 +10,11 @@ export const getAll = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     const images = await Image.findAll({where: { user: userId }});
     const imagesWithUrl = await Promise.all(images.map(async(image) => {
       const url = await getSignedGetUrl(image.filename);
+      const thumbnail = await getThumbnailUrl(image.filename);
       return {
         ...image.dataValues,
-        url
+        url,
+        thumbnail,
       };
     }));
     return {
