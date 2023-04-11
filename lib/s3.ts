@@ -11,6 +11,7 @@ import {
   S3Client
 } from '@aws-sdk/client-s3';
 import {join, parse} from 'path';
+import {UPLOAD_PREFIX} from './constants';
 
 export const s3 = new S3Client({
   credentials: {
@@ -21,24 +22,24 @@ export const s3 = new S3Client({
   endpoint: 'http://localhost:4569'
 });
 
-interface ISendParams {
+export interface ISendParams {
   base64Url: string;
   filename: string;
   contentType: string;
 }
 
-interface IUploadParams {
+export interface IUploadParams {
   filename: string;
   contentType: string;
 }
 
-interface IUploadUrl {
+export interface IUploadUrl {
   filename: string;
   uploadUrl: string;
   expires: Date;
 }
 
-interface IGetUrl {
+export interface IGetUrl {
   filename: string;
   url: string;
   expires: Date;
@@ -69,8 +70,6 @@ const getUniqueName = (fileName: string, datetime: Date, prefix = ''): string =>
 
 };
 
-export const UPLOAD_PREFIX = 'uploads';
-export const THUMBNAILS_PREFIX = 'thumbnails';
 
 export const getSignedUploadUrl = async (uploadParams: IUploadParams): Promise<IUploadUrl> => {
   const expires = 600; // 10 minutes;
