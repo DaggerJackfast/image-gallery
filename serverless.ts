@@ -77,7 +77,7 @@ const serverlessConfiguration: AWS = {
     FILE_BUCKET_NAME: 'image-gallery-files-${opt:stage, \'dev\'}',
     s3: { // TODO: delete for prod
       host: 'localhost',
-      directory: '/tmp'
+      directory: './.Trashes'
     }
   },
   plugins: [
