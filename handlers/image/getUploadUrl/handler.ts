@@ -1,22 +1,9 @@
-import {getSignedUploadUrl} from '../../lib/s3';
-import {ValidatedEventAPIGatewayProxyEvent} from '../../lib/apiGateway';
+import {getSignedUploadUrl} from '../../../lib/s3';
+import {ValidatedEventAPIGatewayProxyEvent} from '../../../lib/apiGateway';
 import {FromSchema} from 'json-schema-to-ts';
-import {middyfy} from '../../lib/lambda';
+import {middyfy} from '../../../lib/lambda';
 import {MiddyfiedHandler} from '@middy/core';
-
-
-export const uploadSchema = {
-  type: 'object',
-  required: ['filename', 'contentType'],
-  properties: {
-    filename: {
-      type: 'string'
-    },
-    contentType: {
-      type: 'string'
-    }
-  }
-} as const;
+import {uploadSchema} from './schema';
 
 type UploadParams = FromSchema<typeof uploadSchema>;
 export const handler: ValidatedEventAPIGatewayProxyEvent<UploadParams> = async (event) => {

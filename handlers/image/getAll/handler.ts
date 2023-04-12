@@ -1,7 +1,7 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
-import {connectToDatabase} from '../../database/connector';
-import {getSignedGetUrl} from '../../lib/s3';
-import {getThumbnailUrl} from '../../lib/thumbnail';
+import {connectToDatabase} from '../../../database/connector';
+import {getSignedGetUrl} from '../../../lib/s3';
+import {getThumbnailUrl} from '../../../lib/thumbnail';
 
 export const getAll = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {

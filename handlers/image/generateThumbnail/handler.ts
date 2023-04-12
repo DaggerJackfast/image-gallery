@@ -1,6 +1,6 @@
 import {S3Event} from 'aws-lambda';
-import {getThumbnailFilename, processThumbnail} from '../../lib/thumbnail';
-import {THUMBNAIL_WIDTH} from '../../lib/constants';
+import {getThumbnailFilename, processThumbnail} from '../../../lib/thumbnail';
+import {THUMBNAIL_WIDTH} from '../../../lib/constants';
 
 
 const handler = async (event: S3Event) => {

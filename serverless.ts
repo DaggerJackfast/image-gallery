@@ -1,6 +1,6 @@
 import type { AWS } from '@serverless/typescript';
 import secrets from './.secrets.json'; // TODO: usage serverless-dotenv-plugin
-import imageFunctions from './handlers/image/functions';
+import imageFunctions from './handlers/image';
 
 
 const serverlessConfiguration: AWS = {
@@ -83,7 +83,8 @@ const serverlessConfiguration: AWS = {
   plugins: [
     'serverless-esbuild',
     'serverless-offline',
-    'serverless-s3-local' // TODO: delete for prod
+    'serverless-s3-local', // TODO: delete for prod
+    'serverless-offline-sqs', // TODO: delete for prod
   ],
   package: { individually: true },
   functions: {

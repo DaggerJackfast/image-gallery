@@ -1,21 +1,10 @@
-import {connectToDatabase} from '../../database/connector';
-import {ValidatedEventAPIGatewayProxyEvent} from '../../lib/apiGateway';
-import {FromSchema} from 'json-schema-to-ts';
-import {middyfy} from '../../lib/lambda';
-import {MiddyfiedHandler} from '@middy/core';
 
-export const updateImageSchema = {
-  type: 'object',
-  required: ['filename'],
-  properties: {
-    filename: {
-      type: 'string',
-    },
-    description: {
-      type: 'string'
-    }
-  }
-} as const;
+import {connectToDatabase} from '../../../database/connector';
+import {ValidatedEventAPIGatewayProxyEvent} from '../../../lib/apiGateway';
+import {FromSchema} from 'json-schema-to-ts';
+import {middyfy} from '../../../lib/lambda';
+import {MiddyfiedHandler} from '@middy/core';
+import {updateImageSchema} from './schema';
 
 type UpdateImageParams = FromSchema<typeof updateImageSchema>
 

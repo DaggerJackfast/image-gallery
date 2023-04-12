@@ -1,4 +1,4 @@
-import {connectToDatabase} from '../../database/connector';
+import {connectToDatabase} from '../../../database/connector';
 
 export const healthcheck = async () => {
   await connectToDatabase();
@@ -7,3 +7,4 @@ export const healthcheck = async () => {
     body: JSON.stringify({ message: 'Connection successful.' })
   };
 };
+
