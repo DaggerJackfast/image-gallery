@@ -32,6 +32,24 @@ const serverlessConfiguration: AWS = {
         Action: ['s3:Get*', 's3:Put*', 's3:DeleteObject'],
         Resource: 'arn:aws:s3:::${self:custom.FILE_BUCKET_NAME}/*'
       },
+      {
+        Effect: 'Allow',
+        Action: ['sqs:SendMessage', 'sqs:GetQueueUrl', ],
+        Resource: [
+          {
+            'Fn::GetAtt': ['${self:custom.QUEUE_NAME}', 'Arn']
+          }
+        ]
+      },
+      {
+        Effect: 'Allow',
+        Action: ['sqs:ListQueues'],
+        Resource: [
+          {
+            'Fn::GetAtt': ['${self:custom.QUEUE_NAME}', 'Arn']
+          }
+        ]
+      }
     ],
     environment: {
       NODE_ENV: '${opt:stage, \'dev\'}',
@@ -42,11 +60,17 @@ const serverlessConfiguration: AWS = {
       DB_PORT: '${self:custom.DB_PORT}',
       DB_HOST: '${self:custom.DB_HOST}',
       FILE_BUCKET_NAME: '${self:custom.FILE_BUCKET_NAME}',
+      QUEUE_NAME: '${self:custom.QUEUE_NAME}',
+      // QUEUE_URL: { Ref: '${self:custom.QUEUE_NAME}' }, // TODO: enable for prod
+      QUEUE_URL: 'http://localhost:9324/queue/${self:custom.QUEUE_NAME}', // TODO delete for prod
       RUNTIME_REGION: 'us-east-1',
       AUTH0_DOMAIN: '${self:custom.AUTH0_DOMAIN}',
       AUTH0_JWKS_URI: '${self:custom.AUTH0_DOMAIN}.well-known/jwks.json',
       AUTH0_API_ID: '${self:custom.AUTH0_API_ID}',
       AUTH0_PUBLIC_PEM: '${self:custom.AUTH0_PUBLIC_PEM}',
+      SQS_ARN: {
+        'Fn::GetAtt': ['${self:custom.QUEUE_NAME}', 'Arn']
+      }
     }
   },
   custom: {
@@ -75,16 +99,28 @@ const serverlessConfiguration: AWS = {
     AUTH0_API_ID: secrets.auth0ApiId,
     AUTH0_PUBLIC_PEM: secrets.auth0PublicPem,
     FILE_BUCKET_NAME: 'image-gallery-files-${opt:stage, \'dev\'}',
+    QUEUE_NAME: 'image-gallery-queue-${opt:stage, \'dev\'}',
     s3: { // TODO: delete for prod
       host: 'localhost',
       directory: './.Trashes'
+    },
+    'serverless-offline-sqs': { // TODO: delete for prod
+      autoCreate: true,
+      apiVersion: '2012-11-05',
+      endpoint: 'http://0.0.0.0:9324',
+      region: 'us-east-1',
+      accessKeyId: 'root',
+      secretAccessKey: 'root',
+      skipCacheInvalidation: false,
     }
   },
   plugins: [
-    'serverless-esbuild',
-    'serverless-offline',
-    'serverless-s3-local', // TODO: delete for prod
+    'serverless-plugin-ifelse',
     'serverless-offline-sqs', // TODO: delete for prod
+    'serverless-offline',
+    'serverless-esbuild',
+    'serverless-cloudside-plugin', // TODO: delete for prod
+    'serverless-s3-local', // TODO: delete for prod
   ],
   package: { individually: true },
   functions: {
@@ -99,7 +135,6 @@ const serverlessConfiguration: AWS = {
           http: {
             method: 'get',
             path: '/',
-            // authorizer: 'auth',
             cors: true,
           }
         }
@@ -120,6 +155,12 @@ const serverlessConfiguration: AWS = {
           BucketName: '${self:custom.FILE_BUCKET_NAME}',
           AccessControl: 'Private',
         },
+      },
+      ImageQueue: {
+        Type: 'AWS::SQS::Queue',
+        Properties: {
+          QueueName: '${self:custom.QUEUE_NAME}'
+        }
       },
       GatewayResponse: {
         Type: 'AWS::ApiGateway::GatewayResponse',
