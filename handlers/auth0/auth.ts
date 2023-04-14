@@ -21,7 +21,6 @@ const generatePolicy = (principalId: string, methodArn: string) => {
 };
 
 const getAuthToken = (params: APIGatewayTokenAuthorizerEvent): string => {
-  console.log('getAuthToken params: ', params);
   if (!params.type || params.type !== 'TOKEN') {
     throw new Error('Expected "event.type" parameter to have value "TOKEN"');
   }
