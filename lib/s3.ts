@@ -6,6 +6,7 @@ import {
   GetObjectCommandOutput,
   HeadObjectCommand,
   HeadObjectCommandOutput,
+  ListObjectsCommand,
   PutObjectCommand,
   PutObjectCommandOutput,
   S3Client
@@ -173,5 +174,32 @@ export const deleteFile = async (filename: string): Promise<DeleteObjectCommandO
   };
   const command = new DeleteObjectCommand(s3Params);
   return await s3.send(command);
+};
+
+export const deleteDirectory = async (dirname: string): Promise<void> => {
+  const BUCKET_NAME = process.env.FILE_BUCKET_NAME || '';
+  const listObjectsParams = {
+    Bucket: BUCKET_NAME,
+    Prefix: dirname,
+  };
+  const listObjectsCommand = new ListObjectsCommand(listObjectsParams);
+  const listObjects = await s3.send(listObjectsCommand);
+  const { Contents: contents } = listObjects;
+
+  if (!contents) return;
+
+  const deletePromises: Promise<DeleteObjectCommandOutput>[] = [];
+  contents.forEach(({ Key }) => {
+    const deleteObjectParams = {
+      Bucket: BUCKET_NAME,
+      Key,
+    };
+    const deleteObjectCommand = new DeleteObjectCommand(deleteObjectParams);
+    deletePromises.push(
+      s3.send(deleteObjectCommand),
+    );
+  });
+
+  await Promise.all(deletePromises);
 };
 
