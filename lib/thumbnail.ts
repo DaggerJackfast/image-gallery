@@ -1,7 +1,8 @@
 import {join, parse} from 'path';
-import {getFileObject, getSignedGetUrl, IGetUrl, uploadFile} from './s3';
+import {deleteDirectory, getFileObject, getSignedGetUrl, IGetUrl, uploadFile} from './s3';
 import sharp from 'sharp';
 import {THUMBNAIL_WIDTH, THUMBNAILS_PREFIX} from './constants';
+import {sendQueueMessage} from './sqs';
 
 export interface IThumbnailParams {
   filename: string;
@@ -29,12 +30,27 @@ export const processThumbnail = async (params: IThumbnailParams): Promise<void> 
 
 export const getThumbnailFilename = (filename: string): string => {
   const extension = parse(filename).ext;
-  const name = parse(filename).name;
   const thumbnailName = `thumbnail_${THUMBNAIL_WIDTH}_px${extension}`;
-  return join(THUMBNAILS_PREFIX, name, thumbnailName);
+  const thumbnailDirectory = getThumbnailDirectory(filename);
+  return join(thumbnailDirectory, thumbnailName);
+};
+
+export const getThumbnailDirectory = (filename: string): string => {
+  const name = parse(filename).name;
+  return join(THUMBNAILS_PREFIX, name);
 };
 
 export const getThumbnailUrl = async(filename: string): Promise<IGetUrl> => {
   const thumbnailFile = getThumbnailFilename(filename);
   return await getSignedGetUrl(thumbnailFile);
+};
+
+export const sendDeleteThumbnailTask = async(filename: string): Promise<void> => {
+  const deleteTask = {filename};
+  await sendQueueMessage(deleteTask);
+};
+
+export const deleteThumbnails = async (filename: string): Promise<void> => {
+  const thumbnailDirectory = getThumbnailDirectory(filename);
+  await deleteDirectory(thumbnailDirectory);
 };

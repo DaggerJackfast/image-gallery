@@ -1,6 +1,7 @@
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
 import {connectToDatabase} from '../../../database/connector';
 import {deleteFile} from '../../../lib/s3';
+import {sendDeleteThumbnailTask} from '../../../lib/thumbnail';
 
 export const destroy = async(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const {Image} = await connectToDatabase();
@@ -12,6 +13,7 @@ export const destroy = async(event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
   await image?.destroy();
   await deleteFile(image.filename);
+  await sendDeleteThumbnailTask(image.filename);
   return { statusCode: 204, body: '' };
 };
 
