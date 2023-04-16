@@ -1,5 +1,4 @@
 import type { AWS } from '@serverless/typescript';
-import secrets from './.secrets.json'; // TODO: usage serverless-dotenv-plugin
 import imageFunctions from './handlers/image';
 
 
@@ -8,6 +7,7 @@ const serverlessConfiguration: AWS = {
   app: 'image-gallery',
   service: 'image-gallery',
   frameworkVersion: '3',
+  useDotenv: true,
   provider: {
     name: 'aws',
     runtime: 'nodejs18.x',
@@ -83,21 +83,21 @@ const serverlessConfiguration: AWS = {
       platform: 'node',
       concurrency: 10,
     },
-    DB_NAME: secrets.databaseName,
-    DB_USERNAME: secrets.databaseUser,
-    DB_PASSWORD: secrets.databasePassword,
-    DB_PORT: secrets.databasePort,
-    DB_HOST: secrets.databaseHost,
-    SECURITY_GROUP_ID: secrets.securityGroupId,
-    SUBNET1_ID: secrets.subnet1Id,
-    SUBNET2_ID: secrets.subnet2Id,
-    SUBNET3_ID: secrets.subnet3Id,
-    SUBNET4_ID: secrets.subnet4Id,
-    SUBNET5_ID: secrets.subnet5Id,
-    SUBNET6_ID: secrets.subnet6Id,
-    AUTH0_DOMAIN: secrets.auth0Domain,
-    AUTH0_API_ID: secrets.auth0ApiId,
-    AUTH0_PUBLIC_PEM: secrets.auth0PublicPem,
+    DB_NAME: '${env:DB_NAME}',
+    DB_USERNAME: '${env:DB_USERNAME}',
+    DB_PASSWORD: '${env:DB_PASSWORD}',
+    DB_PORT: '${env:DB_PORT}',
+    DB_HOST: '${env:DB_HOST}',
+    SECURITY_GROUP_ID: '${env:SECURITY_GROUP_ID}',
+    SUBNET1_ID:'${env:SUBNET1_ID}',
+    SUBNET2_ID:'${env:SUBNET2_ID}',
+    SUBNET3_ID: '${env:SUBNET3_ID}',
+    SUBNET4_ID: '${env:SUBNET4_ID}',
+    SUBNET5_ID: '${env:SUBNET5_ID}',
+    SUBNET6_ID: '${env:SUBNET6_ID}',
+    AUTH0_DOMAIN: '${env:AUTH0_DOMAIN}',
+    AUTH0_API_ID: '${env:AUTH0_API_ID}',
+    AUTH0_PUBLIC_PEM: '${env:AUTH0_PUBLIC_PEM}',
     FILE_BUCKET_NAME: 'image-gallery-files-${opt:stage, \'dev\'}',
     QUEUE_NAME: 'image-gallery-queue-${opt:stage, \'dev\'}',
     s3: { // TODO: delete for prod
@@ -121,6 +121,7 @@ const serverlessConfiguration: AWS = {
     'serverless-esbuild',
     'serverless-cloudside-plugin', // TODO: delete for prod
     'serverless-s3-local', // TODO: delete for prod
+    'serverless-dotenv-plugin',
   ],
   package: { individually: true },
   functions: {

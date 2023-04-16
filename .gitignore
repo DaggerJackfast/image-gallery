@@ -21,3 +21,6 @@ jspm_packages
 
 # Tmuxinator
 .tmuxinator.yml
+.env
+.env.*
+!.env.example
