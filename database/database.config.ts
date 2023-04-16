@@ -1,5 +1,6 @@
-import { Sequelize } from 'sequelize';
+import {Sequelize} from 'sequelize';
 import pg from 'pg';
+
 const CURRENT_LAMBDA_FUNCTION_TIMEOUT = 5000;
 
 
@@ -8,11 +9,8 @@ export const loadSequelize = (): Sequelize => {
   const dbUsername = process.env.DB_USERNAME;
   const dbPassword = process.env.DB_PASSWORD;
   const dbHost = process.env.DB_HOST;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const dbPort = parseInt(process.env.DB_PORT);
-  const sequelize = new Sequelize({
-    // TODO: database settings;
+  const dbPort = parseInt(process.env.DB_PORT || '5432');
+  return new Sequelize({
     database: dbName,
     dialect: 'postgres',
     dialectModule: pg,
@@ -28,7 +26,6 @@ export const loadSequelize = (): Sequelize => {
       evict: CURRENT_LAMBDA_FUNCTION_TIMEOUT
     }
   });
-  return sequelize;
 };
 
 const sequelize = loadSequelize();
