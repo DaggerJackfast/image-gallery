@@ -1,3 +1,5 @@
+import { ORIGIN } from '../../../lib/constants';
+
 export const getAllImages = {
   getImages: {
     handler: 'handlers/image/getAll/handler.getAll',
@@ -6,7 +8,10 @@ export const getAllImages = {
         http: {
           method: 'get',
           path: '/images',
-          cors: true,
+          cors: {
+            origin: ORIGIN,
+            allowCredentials: true,
+          },
           authorizer: 'auth',
         }
       }

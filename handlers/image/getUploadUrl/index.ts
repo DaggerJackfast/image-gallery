@@ -1,3 +1,4 @@
+import { ORIGIN } from '../../../lib/constants';
 import {uploadSchema} from './schema';
 
 export const getUploadUrl = {
@@ -9,7 +10,10 @@ export const getUploadUrl = {
           method: 'post',
           path: 'images-upload-url/',
           authorizer: 'auth',
-          cors: true,
+          cors: {
+            origin: ORIGIN,
+            allowCredentials: true,
+          },
           request: {
             schemas: {
               'application/json': uploadSchema

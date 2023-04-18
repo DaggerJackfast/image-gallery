@@ -1,3 +1,5 @@
+import { ORIGIN } from '../../../lib/constants';
+
 export const getImagesCount = {
   getImagesCount: {
     handler: 'handlers/image/getCount/handler.getCount',
@@ -6,7 +8,10 @@ export const getImagesCount = {
         http: {
           method: 'get',
           path: '/images-count',
-          cors: true,
+          cors: {
+            origin: ORIGIN,
+            allowCredentials: true,
+          },
           authorizer: 'auth',
         }
       }

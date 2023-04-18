@@ -1,3 +1,5 @@
+import { ORIGIN } from '../../../lib/constants';
+
 export const updateImage = {
   updateImage: {
     handler: 'handlers/image/update/handler.update',
@@ -7,7 +9,10 @@ export const updateImage = {
           method: 'patch',
           path: 'images/{id}',
           authorizer: 'auth',
-          cors: true
+          cors: {
+            origin: ORIGIN,
+            allowCredentials: true,
+          },
         }
       }
     ]

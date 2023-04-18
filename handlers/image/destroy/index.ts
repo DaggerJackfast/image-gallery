@@ -1,3 +1,5 @@
+import { ORIGIN } from '../../../lib/constants';
+
 export const deleteImage = {
   deleteImage: {
     handler: 'handlers/image/destroy/handler.destroy',
@@ -7,7 +9,10 @@ export const deleteImage = {
           method: 'delete',
           path: 'images/{id}',
           authorizer: 'auth',
-          cors: true
+          cors: {
+            origin: ORIGIN,
+            allowCredentials: true,
+          }
         }
       }
     ]
