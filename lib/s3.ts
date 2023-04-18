@@ -9,19 +9,28 @@ import {
   ListObjectsCommand,
   PutObjectCommand,
   PutObjectCommandOutput,
-  S3Client
+  S3Client,
+  S3ClientConfig
 } from '@aws-sdk/client-s3';
 import {join, parse} from 'path';
 import {UPLOAD_PREFIX} from './constants';
 
-export const s3 = new S3Client({
-  credentials: {
-    accessKeyId: 'S3RVER', // This specific key is required when working offline
-    secretAccessKey: 'S3RVER',
-  },
-  forcePathStyle: true,
-  endpoint: 'http://localhost:4569'
-});
+const buildS3Client = (): S3Client => {
+  let config: S3ClientConfig = {};
+  if(process.env.NODE_ENV === 'dev') {
+    config = {
+      credentials: {
+        accessKeyId: 'S3RVER', // This specific key is required when working offline
+        secretAccessKey: 'S3RVER',
+      },
+      forcePathStyle: true,
+      endpoint: 'http://localhost:4569'
+    };
+  }
+  return new S3Client(config);
+};
+
+export const s3 = buildS3Client();
 
 export interface ISendParams {
   base64Url: string;
@@ -153,6 +162,7 @@ export const uploadFile = async (file: IUploadFile): Promise<PutObjectCommandOut
     ContentType: contentType
   };
   const command = new PutObjectCommand(s3Params);
+  console.log('before command send ============== ');
   return await s3.send(command);
 };
 
