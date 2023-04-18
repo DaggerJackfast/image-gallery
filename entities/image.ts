@@ -6,7 +6,7 @@ interface ImageAttributes {
   filename: string;
   // url?: string;
   description?: string;
-  user?: string; // TODO: change to required field
+  user?: string;
 }
 
 type ImageInput = Optional<ImageAttributes, 'id' | 'description' | 'user'>
