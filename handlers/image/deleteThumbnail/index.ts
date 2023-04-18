@@ -5,9 +5,9 @@ export const deleteThumbnail = {
       {
         sqs: {
           enabled: true,
-          queueName: '${self:custom.QUEUE_NAME}',
+          // queueName: '${self:custom.QUEUE_NAME}',
           arn: {
-            'Fn::GetAtt': ['${self:custom.QUEUE_NAME}', 'Arn']
+            'Fn::GetAtt': ['ImageQueue', 'Arn']
           }
         }
       }
