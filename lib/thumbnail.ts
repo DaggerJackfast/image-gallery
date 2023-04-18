@@ -23,7 +23,7 @@ export const processThumbnail = async (params: IThumbnailParams): Promise<void> 
   }
   const original = await getFileObject(filename);
   const contentType = original.ContentType as string;
-  const bodyByteArray = await  original.Body?.transformToByteArray(); // TODO: has potential problem with memory limit
+  const bodyByteArray = await original.Body?.transformToByteArray(); // TODO: has potential problem with memory limit
   const destinationBuffer = await sharp(bodyByteArray).resize(width).toBuffer();
   await uploadFile({filename: destination, body: destinationBuffer, contentType});
 };
