@@ -1,10 +1,12 @@
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
+import {APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult} from 'aws-lambda';
 import {connectToDatabase} from '../../../database/connector';
 import {HTTPError} from '../../../lib/errors';
 import {getThumbnailUrl} from '../../../lib/thumbnail';
 import {getSignedGetUrl} from '../../../lib/s3';
+import { middyfy } from '../../../lib/lambda';
+import { MiddyfiedHandler } from '@middy/core';
 
-export const getOne = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const handler:APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const {Image} = await connectToDatabase();
     const imageId = event.pathParameters?.id;
@@ -37,3 +39,5 @@ export const getOne = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
     };
   }
 };
+
+export const getOne = middyfy(handler as MiddyfiedHandler);

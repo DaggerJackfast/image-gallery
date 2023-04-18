@@ -1,9 +1,11 @@
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
+import {APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult} from 'aws-lambda';
 import {connectToDatabase} from '../../../database/connector';
 import {deleteFile} from '../../../lib/s3';
 import {sendDeleteThumbnailTask} from '../../../lib/thumbnail';
+import { middyfy } from '../../../lib/lambda';
+import { MiddyfiedHandler } from '@middy/core';
 
-export const destroy = async(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const handler: APIGatewayProxyHandler = async(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const {Image} = await connectToDatabase();
   const imageId = event.pathParameters?.id;
   const userId = event.requestContext.authorizer?.principalId;
@@ -17,4 +19,4 @@ export const destroy = async(event: APIGatewayProxyEvent): Promise<APIGatewayPro
   return { statusCode: 204, body: '' };
 };
 
-
+export const destroy = middyfy(handler as MiddyfiedHandler);

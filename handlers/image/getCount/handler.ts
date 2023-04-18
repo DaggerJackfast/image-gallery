@@ -1,7 +1,9 @@
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from 'aws-lambda';
+import {APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult} from 'aws-lambda';
 import {connectToDatabase} from '../../../database/connector';
+import {middyfy} from '../../../lib/lambda';
+import { MiddyfiedHandler } from '@middy/core';
 
-export const getCount = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const handler:APIGatewayProxyHandler  = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const {Image} = await connectToDatabase();
     const userId = event.requestContext.authorizer?.principalId;
@@ -22,3 +24,6 @@ export const getCount = async (event: APIGatewayProxyEvent): Promise<APIGatewayP
     };
   }
 };
+
+export const getCount = middyfy(handler as MiddyfiedHandler);
+
