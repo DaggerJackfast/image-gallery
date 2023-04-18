@@ -1,14 +1,24 @@
-import {GetQueueUrlCommand, SendMessageCommand, SendMessageCommandOutput, SQSClient} from '@aws-sdk/client-sqs';
+import {GetQueueUrlCommand, SendMessageCommand, SendMessageCommandOutput, SQSClient, SQSClientConfig} from '@aws-sdk/client-sqs';
 
-export const sqs = new SQSClient({
-  region: process.env.RUNTIME_REGION,
-  credentials: {
-    accessKeyId: 'root',
-    secretAccessKey: 'root',
-  },
-  endpoint: 'http://localhost:9324',
-  apiVersion: '2012-11-05'
-});
+const buildSQSClient = (): SQSClient => {
+  let config: SQSClientConfig = {
+    region: process.env.RUNTIME_REGION
+  };
+  if(process.env.NODE_ENV === 'dev') {
+    config = {
+      region: process.env.RUNTIME_REGION,
+      credentials: {
+        accessKeyId: 'root',
+        secretAccessKey: 'root',
+      },
+      endpoint: 'http://localhost:9324',
+      apiVersion: '2012-11-05'
+    };
+  }
+  return new SQSClient(config);
+};
+
+export const sqs = buildSQSClient();
 
 export const getQueueUrl = async () => {
   const sqsParams = {
