@@ -1,5 +1,5 @@
 import type { AWS } from '@serverless/typescript';
-import imageFunctions from './handlers/image';
+import handlers from './handlers';
 
 const serverlessConfiguration: AWS = {
   org: 'jackfast',
@@ -191,5 +191,3 @@ const serverlessConfiguration: AWS = {
 };
 
 module.exports = serverlessConfiguration;
-
-// export default serverlessConfiguration;
