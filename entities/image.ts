@@ -4,7 +4,6 @@ import sequelize from '../database/database.config';
 interface ImageAttributes {
   id?: string;
   filename: string;
-  // url?: string;
   description?: string;
   user?: string;
 }
@@ -18,7 +17,6 @@ class Image extends Model<ImageAttributes, ImageInput> implements ImageAttribute
   public id!: string;
   public filename!: string;
   public description!: string;
-  // public url!: string;
   public user!: string;
 
   public readonly createdAt!: Date;
