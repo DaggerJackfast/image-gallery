@@ -10,7 +10,6 @@ export const connectToDatabase = async () => {
     console.log('Using existing connection');
     return Models;
   }
-  await sequelize.sync();
   await sequelize.authenticate();
   connection.isConnected = true;
   return Models;
